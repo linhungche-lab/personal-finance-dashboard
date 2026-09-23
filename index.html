@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; worker-src 'self'" />
+  <meta name="description" content="Personal Finance Dashboard" />
+  <title>Personal Finance Dashboard</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="brand">
+        <span class="brand-kicker">PERSONAL FINANCE</span>
+        <h1>Dashboard</h1>
+      </div>
+
+      <div class="header-actions" id="importControls" aria-busy="false">
+        <div class="data-status" id="dataStatus" role="status" aria-live="polite">
+          <span class="status-dot"></span>
+          <div>
+            <strong id="dataStatusLabel">尚未載入財務資料</strong>
+            <span id="loadedFileName"></span>
+            <span id="loadedTime"></span>
+          </div>
+        </div>
+        <input type="file" id="excelFileInput" accept=".xlsx,.xls" hidden aria-label="選擇本機 Excel 財務資料" />
+        <button class="btn btn-primary" id="chooseExcelBtn" type="button">選擇 Excel</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="dashboard-shell">
+    <section class="alert-panel import-errors hidden" id="importErrors" role="alert" tabindex="-1" aria-labelledby="importErrorTitle">
+      <div class="alert-icon" aria-hidden="true">!</div>
+      <div>
+        <h2 id="importErrorTitle">Excel 匯入失敗</h2>
+        <p id="importErrorContext"></p>
+        <ul id="importErrorList"></ul>
+      </div>
+    </section>
+    <section class="intro-row">
+      <div>
+        <p class="eyebrow">OVERVIEW</p>
+        <h2>財務總覽</h2>
+        <p class="section-description">從本機 Excel 載入財務資料，僅在此分頁記憶體中計算，不上傳、不儲存。</p>
+      </div>
+      <div class="snapshot-meta">
+        <span>資料來源</span>
+        <strong id="snapshotLabel">—</strong>
+      </div>
+    </section>
+
+    <section class="panel unloaded-state" id="unloadedState">
+      <h3>尚未載入財務資料</h3>
+      <p>請使用上方「選擇 Excel」載入 V1.1 格式活頁簿。</p>
+      <p>支援 .xlsx / .xls，最大 5 MB。重新整理或關閉分頁後，需重新選擇檔案。</p>
+    </section>
+    <noscript><p>請啟用 JavaScript，才能在瀏覽器中解析 Excel。</p></noscript>
+    <div id="dashboardContent" class="hidden">
+    <section class="metric-grid">
+      <article class="metric-card">
+        <span class="metric-label">TOTAL ASSETS</span>
+        <strong class="metric-value" id="totalAssetsShort">—</strong>
+        <span class="metric-detail" id="totalAssetsFull">—</span>
+        <span class="metric-name">總資產</span>
+      </article>
+
+      <article class="metric-card">
+        <span class="metric-label">LIABILITIES</span>
+        <strong class="metric-value" id="totalLiabilitiesShort">—</strong>
+        <span class="metric-detail" id="totalLiabilitiesFull">—</span>
+        <span class="metric-name">總負債</span>
+      </article>
+
+      <article class="metric-card">
+        <span class="metric-label">NET WORTH</span>
+        <strong class="metric-value" id="netWorthShort">—</strong>
+        <span class="metric-detail" id="netWorthFull">—</span>
+        <span class="metric-name">淨資產</span>
+      </article>
+
+      <article class="metric-card">
+        <span class="metric-label">DEBT RATIO</span>
+        <strong class="metric-value" id="debtRatioValue">—</strong>
+        <span class="metric-detail">總負債 ÷ 總資產</span>
+        <span class="status-line" id="debtRatioStatus">—</span>
+      </article>
+    </section>
+
+    <section class="split-grid section-block">
+      <article class="panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">ALLOCATION</p>
+            <h3>資產配置</h3>
+          </div>
+          <span class="panel-total" id="assetAllocationTotal">—</span>
+        </div>
+        <div class="chart-layout">
+          <div class="chart-wrap"><canvas id="assetChart"></canvas></div>
+          <div class="legend-list" id="assetLegend"></div>
+        </div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">LIABILITIES</p>
+            <h3>負債結構</h3>
+          </div>
+          <span class="panel-total" id="liabilityStructureTotal">—</span>
+        </div>
+        <div id="liabilityChartContent">
+          <div class="chart-layout">
+            <div class="chart-wrap"><canvas id="liabilityChart"></canvas></div>
+            <div class="legend-list" id="liabilityLegend"></div>
+          </div>
+        </div>
+        <div class="empty-inline hidden" id="noLiabilityState">
+          <span class="empty-icon">✓</span>
+          <div>
+            <strong>目前無負債</strong>
+            <p>負債結構圖將在有負債資料時顯示。</p>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="section-block">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">FINANCIAL HEALTH</p>
+          <h2>財務健康</h2>
+        </div>
+      </div>
+
+      <div class="health-grid" id="healthGrid"></div>
+
+      <article class="panel observations-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">PORTFOLIO OBSERVATIONS</p>
+            <h3>資產配置觀察</h3>
+          </div>
+        </div>
+        <div class="observation-list" id="observationList"></div>
+      </article>
+    </section>
+
+    <section class="section-block">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">PORTFOLIO</p>
+          <h2>投資組合</h2>
+        </div>
+      </div>
+
+      <div class="portfolio-grid">
+        <article class="panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">SUMMARY</p>
+              <h3>投資組合摘要</h3>
+            </div>
+          </div>
+
+          <div class="portfolio-stats">
+            <div class="portfolio-stat">
+              <span>股票 / ETF 市值</span>
+              <strong id="portfolioMarketValue">—</strong>
+            </div>
+            <div class="portfolio-stat">
+              <span>投資成本</span>
+              <strong id="portfolioCost">—</strong>
+            </div>
+            <div class="portfolio-stat">
+              <span>未實現損益</span>
+              <strong id="portfolioPnl">—</strong>
+            </div>
+            <div class="portfolio-stat">
+              <span>未實現報酬率</span>
+              <strong id="portfolioReturn">—</strong>
+            </div>
+          </div>
+
+          <div class="largest-holding">
+            <span class="metric-label">LARGEST HOLDING</span>
+            <strong id="largestHoldingName">—</strong>
+            <div class="largest-holding-metrics">
+              <span id="largestHoldingPortfolioWeight">—</span>
+              <span id="largestHoldingAssetWeight">—</span>
+            </div>
+          </div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">HOLDINGS MIX</p>
+              <h3>持股配置</h3>
+            </div>
+          </div>
+          <div class="chart-wrap chart-wrap--portfolio">
+            <canvas id="portfolioChart"></canvas>
+          </div>
+        </article>
+      </div>
+
+      <article class="panel holdings-panel">
+        <div class="panel-heading holdings-heading">
+          <div>
+            <p class="eyebrow">HOLDINGS</p>
+            <h3>持股明細</h3>
+          </div>
+          <span class="table-note">依 TWD 市值由大到小排列</span>
+        </div>
+
+        <div class="table-scroll">
+          <table class="holdings-table">
+            <thead>
+              <tr>
+                <th>股票</th>
+                <th>市場</th>
+                <th class="num">股數</th>
+                <th class="num">現價</th>
+                <th class="num">市值 TWD</th>
+                <th class="num">比重</th>
+                <th class="num">損益 TWD</th>
+                <th class="num">報酬率</th>
+              </tr>
+            </thead>
+            <tbody id="holdingsBody"></tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+
+    <section class="section-block hidden" id="validationSection">
+      <article class="alert-panel">
+        <div class="alert-icon">!</div>
+        <div>
+          <h2>資料需要確認</h2>
+          <ul id="validationList"></ul>
+        </div>
+      </article>
+    </section>
+
+    </div>
+    <footer class="site-footer">
+      V1 Phase 3.2 — Excel 本機匯入。財務資料僅存在此分頁記憶體，原始 Excel 不會被修改。
+    </footer>
+  </main>
+
+  <script src="vendor/chart-4.4.7.umd.min.js"></script>
+  <script src="vendor/xlsx-0.20.3.full.min.js"></script>
+  <script src="excel-import.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

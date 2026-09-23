@@ -1,0 +1,13 @@
+Personal Finance Dashboard — Phase 3.2
+
+1. 將 ZIP 完整解壓縮至新資料夾，不要只取出 index.html。
+2. 開啟解壓縮後的 index.html。
+3. 確認頁首為「尚未載入財務資料」，右側有「選擇 Excel」。
+4. 選取本機填好的 Excel；格式與欄位規則請參考 README.md。
+5. vendor、excel-import.js、excel-worker.js 必須保留相對位置。
+
+程式不會上傳、長期儲存或改寫你的 Excel。重新整理後需再次選檔。
+不包含開發暫存檔、Node 套件或真實財務資料。
+套件保留第三方授權文字。測試工具的安裝不是網站使用的必要條件。
+
+未包含 sample Excel：目前檔案與原始空白模板不同，為避免包含私人資料而排除。請使用你本機的 Excel。
