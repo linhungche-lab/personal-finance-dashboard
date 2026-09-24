@@ -8,6 +8,9 @@ let loadedRaw = null;
 let importSequence = 0;
 
 document.addEventListener("DOMContentLoaded",()=>{
+  document.getElementById("exportPdfBtn").addEventListener("click", exportPdf);
+  window.addEventListener("beforeprint", preparePrintCharts);
+  window.addEventListener("afterprint", restoreScreenCharts);
   const input = document.getElementById("excelFileInput");
   document.getElementById("chooseExcelBtn").addEventListener("click",()=>input.click());
   input.addEventListener("change",()=>{
@@ -15,6 +18,33 @@ document.addEventListener("DOMContentLoaded",()=>{
     if (file) importExcelFile(file);
   });
 });
+
+function setPdfAvailable(available) {
+  const button = document.getElementById("exportPdfBtn");
+  button.disabled = !available;
+  button.title = available ? "開啟列印視窗，請選擇另存為 PDF" : "請先成功載入 Excel 並完成圖表繪製";
+}
+
+function exportPdf() {
+  if (!loadedRaw || document.getElementById("exportPdfBtn").disabled) return;
+  window.print();
+}
+
+function preparePrintCharts() {
+  // Explicit dimensions avoid responsive canvas timing issues in print layout.
+  Object.values(charts).filter(Boolean).forEach(chart=>{
+    chart.resize(260, 260);
+    chart.update("none");
+  });
+}
+
+function restoreScreenCharts() {
+  // afterprint also fires when the user cancels the dialog.
+  Object.values(charts).filter(Boolean).forEach(chart=>{
+    chart.resize();
+    chart.update("none");
+  });
+}
 
 function parseExcelLocally(buffer) {
   // Workers keep parsing off the UI thread on GitHub Pages / HTTP(S).
@@ -44,6 +74,7 @@ async function importExcelFile(file) {
   const sequence = ++importSequence;
   const button = document.getElementById("chooseExcelBtn");
   const input = document.getElementById("excelFileInput");
+  setPdfAvailable(false);
   button.disabled = true;
   input.disabled = true;
   button.textContent = "載入中…";
@@ -61,12 +92,15 @@ async function importExcelFile(file) {
     // The adapter validates the complete workbook before the existing model is called.
     document.getElementById("dashboardContent").classList.remove("hidden");
     renderDashboard(raw);
+    // Finish chart animations synchronously before enabling export.
+    Object.values(charts).filter(Boolean).forEach(chart=>chart.update("none"));
     loadedRaw = raw;
     document.getElementById("unloadedState").classList.add("hidden");
     setText("dataStatusLabel", "✓ 財務資料已載入");
     setText("loadedFileName", file.name);
     setText("loadedTime", `載入時間：${loadedAt.toLocaleString("zh-TW", {hour12:false})}`);
     document.getElementById("dataStatus").classList.add("is-loaded");
+    setPdfAvailable(typeof Chart !== "undefined");
   } catch (error) {
     if (sequence !== importSequence) return;
     if (!loadedRaw) document.getElementById("dashboardContent").classList.add("hidden");
@@ -338,6 +372,7 @@ function renderHoldingsTable(rows){
       <td><span class="holding-symbol">${escapeHtml(h.ticker||"—")}</span>${h.name?`<span class="holding-name">${escapeHtml(h.name)}</span>`:""}</td>
       <td>${escapeHtml(h.market||"—")}</td>
       <td class="num">${formatShares(h.shares)}</td>
+      <td class="num">${escapeHtml(formatPrice(h.avgCost,h.currency))}</td>
       <td class="num">${escapeHtml(formatPrice(h.currentPrice,h.currency))}</td>
       <td class="num">${formatMoneyFull(h.marketValueTwd)}</td>
       <td class="num">${formatPercent(h.portfolioWeight)}</td>

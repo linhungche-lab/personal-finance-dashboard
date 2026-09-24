@@ -542,7 +542,7 @@ button { cursor: pointer; }
 
 .holdings-table {
   width: 100%;
-  min-width: 900px;
+  min-width: 1020px;
   border-collapse: collapse;
   background: #fff;
 }
@@ -669,4 +669,65 @@ button { cursor: pointer; }
 @media (max-width: 768px) {
   .snapshot-meta { max-width: 100%; }
   #loadedFileName { max-width: 100%; }
+}
+
+/* Local PDF export: the browser owns the save dialog. */
+.header-actions { flex-wrap: wrap; }
+#exportPdfBtn { flex: 0 0 auto; }
+#exportPdfBtn:disabled { cursor: not-allowed; }
+@media (max-width: 768px) {
+  .data-status { flex: 1 0 100%; }
+}
+
+@page { size: A4 portrait; margin: 12mm; }
+@media print {
+  html, body { background: #fff; min-width: 0; font-size: 10pt; }
+  body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  .site-header { position: static; background: #fff; box-shadow: none; backdrop-filter: none; border-bottom: 1px solid #d5d1c7; }
+  .header-inner { padding: 0 0 12px; min-height: 0; flex-wrap: nowrap; }
+  .brand h1, .data-status strong { color: var(--navy-950); }
+  .data-status { color: var(--muted); flex: initial; }
+  .header-actions { width: auto; }
+  .btn, #excelFileInput, .status-dot, #importErrors, .section-description { display: none !important; }
+  .dashboard-shell { width: 100%; max-width: none; padding: 16px 0 0; }
+  .intro-row { flex-direction: row; align-items: center; }
+  .snapshot-meta { max-width: 55%; }
+  .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .metric-card { min-height: 130px; padding: 14px; overflow: visible; }
+  .metric-card::after { display: none; }
+  .metric-value { font-size: 25px; margin-top: 12px; }
+  .metric-card:nth-child(3) { background: #fff; border-color: var(--stone-300); }
+  .metric-card:nth-child(3) .metric-value,
+  .metric-card:nth-child(3) .metric-label,
+  .metric-card:nth-child(3) .metric-detail,
+  .metric-card:nth-child(3) .metric-name { color: var(--navy-950); }
+  .section-block { margin-top: 22px; }
+  .split-grid { display: block; }
+  .split-grid > .panel + .panel { margin-top: 14px; }
+  .panel { padding: 14px; }
+  .panel, .metric-card, .health-card { box-shadow: none; }
+  .panel, .metric-card, .health-card, .observation-row { break-inside: avoid; page-break-inside: avoid; }
+  .section-heading, .panel-heading { break-after: avoid; page-break-after: avoid; }
+  .chart-layout { grid-template-columns: 260px minmax(0, 1fr); gap: 20px; }
+  .chart-wrap, .chart-wrap--portfolio { width: 260px; min-height: 260px; height: 260px !important; margin: auto; }
+  .chart-wrap canvas, .chart-wrap--portfolio canvas { width: 260px !important; height: 260px !important; min-height: 0; }
+  .health-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .health-card { min-height: 120px; padding: 12px; }
+  .health-value { font-size: 23px; }
+  .observation-row { grid-template-columns: 1.1fr .7fr 1fr; gap: 10px; }
+  .observation-status { grid-column: auto; text-align: right; }
+  .portfolio-grid { grid-template-columns: minmax(0, 1fr) 290px; gap: 12px; }
+  .portfolio-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .portfolio-stat { padding: 10px; }
+  .portfolio-stat strong { font-size: 17px; overflow-wrap: anywhere; }
+  .holdings-panel { break-inside: auto; page-break-inside: auto; }
+  .holdings-heading { flex-direction: row; align-items: center; }
+  .table-scroll { overflow: visible; border-radius: 0; }
+  .holdings-table { min-width: 0; width: 100%; table-layout: fixed; }
+  .holdings-table th, .holdings-table td { padding: 7px 4px; white-space: normal; overflow-wrap: anywhere; font-size: 9pt; }
+  .holdings-table th:first-child { width: 18%; }
+  .holding-name { display: block; margin-left: 0; font-size: 9pt; }
+  .holdings-table thead { display: table-header-group; }
+  .holdings-table tr { break-inside: avoid; page-break-inside: avoid; }
+  .site-footer { margin-top: 20px; padding: 12px 0 0; }
 }

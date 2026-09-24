@@ -27,6 +27,7 @@
         </div>
         <input type="file" id="excelFileInput" accept=".xlsx,.xls" hidden aria-label="選擇本機 Excel 財務資料" />
         <button class="btn btn-primary" id="chooseExcelBtn" type="button">選擇 Excel</button>
+        <button class="btn btn-primary" id="exportPdfBtn" type="button" disabled title="請先成功載入 Excel">匯出 PDF</button>
       </div>
     </div>
   </header>
@@ -224,6 +225,7 @@
                 <th>股票</th>
                 <th>市場</th>
                 <th class="num">股數</th>
+                <th class="num" title="Excel 持股明細的平均成本／股，以原幣顯示">成本價</th>
                 <th class="num">現價</th>
                 <th class="num">市值 TWD</th>
                 <th class="num">比重</th>

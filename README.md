@@ -18,6 +18,14 @@ python3 -m http.server 8000
 
 在瀏覽器開啟 `http://localhost:8000`。HTTP(S) / GitHub Pages 使用 Web Worker 解析，15 秒未完成會終止並提示；`file://` 或不支援 Worker 的瀏覽器使用相同 parser 在主執行緒本機解析，大檔可能短暫影響操作。
 
+## 匯出 PDF
+
+成功載入 Excel 並完成圖表繪製後，按上方「匯出 PDF」，在瀏覽器列印視窗選擇「另存為 PDF」（macOS 也可能顯示在 PDF 選單）。預設 A4 直向，建議關閉瀏覽器的頁首／頁尾，使用預設縮放；背景圖形可開啟以保留配色。
+
+未載入、載入中、匯入失敗或圖表套件缺失時，匯出按鈕停用。匯入失敗仍可查看上一份資料，但需再次成功載入才能匯出，避免誤存舊資料。取消列印後可以繼續使用及再次匯出。
+
+列印保留來源檔名、載入時間、財務指標、圖表、完整持股及資料提醒，隱藏操作按鈕。長持股表允許跨頁並重複表頭。載入時間不是資產估值日期。PDF 是使用者主動儲存的財務報表，包含當次財務資料；不會上傳至 GitHub、不修改 Excel，也不寫入瀏覽器儲存空間。不同瀏覽器的分頁可能略有不同。
+
 ## 網站檔案
 
 部署只需：`index.html`、`style.css`、`app.js`、`excel-import.js`、`excel-worker.js` 與整個 `vendor/`。
@@ -119,3 +127,5 @@ NODE_PATH=./work/node_modules node --test tests/excel-import.test.cjs tests/dom.
 本次驗證：上述 22 項測試全部通過，含在 VM 模擬 Worker 環境執行實際 worker/parser 程式；`buildFinancialModel` 與 `normalizeHoldings` 與修改前逐字一致，來源範例 Excel 雜湊未變。原生 Chromium 因 macOS 沙盒的 MachPort 權限限制無法啟動，因此 `browser.test.cjs` 尚未通過實際執行，桌機／手機視覺、原生 Worker 與 CSP 的瀏覽器實測仍待在一般瀏覽器環境確認。DOM 模擬不等於視覺驗證。
 
 測試資料全部是獨立虛構資料，不使用真實財務數字。瀏覽器測試包含背景解析、直接 file:// 開啟、錯誤後復原、保留舊資料、無持股重載、重新整理清空、HTML 跳脫、手機版面及沒有資料儲存／對外資料請求。Playwright 僅為開發測試工具，不會加入網站執行依賴。
+
+PDF 匯出修改驗證：parser／模型／DOM 測試共 24 項通過，包含列印按鈕狀態、匯入失敗後停用、列印事件的圖表尺寸恢復及缺少 Chart.js 的處理。HTML 元素引用與 CSS 語法檢查通過；原生列印視窗與實際 PDF 分頁仍需在一般瀏覽器確認。
